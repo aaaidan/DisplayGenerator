@@ -139,7 +139,7 @@ function initializeVue() {
 			watch: {
 				$props: {
 					handler(val) {			
-						processCommands();
+						updateOutput();
 					},
 					deep: true
 				},
@@ -173,12 +173,21 @@ function initializeVue() {
 			});
 		},
 		data: {
+			tools: [
+				"select",
+				"rect",
+				"text"
+			],
+			currentTool: "rect",
+			objects: [
+				{id: 1, type: "rect", x: 10, y:10, w: 20, h:5, strokeColor:1, fillColor: null }
+			],
 			commands: [
-				{id:1, op:'setTextColor', invert:false},
-				{id:2, op:'setTextSize', size:"1"},
-				{id:3, op:'setFont', font:"Default"},
-				{id:4, op:'setCursor', x:"0", y:"10"},
-				{id:5, op:'println', text:"HELLO WORLD"}
+				// {id:1, op:'setTextColor', invert:false},
+				// {id:2, op:'setTextSize', size:"1"},
+				// {id:3, op:'setFont', font:"Default"},
+				// {id:4, op:'setCursor', x:"0", y:"10"},
+				// {id:5, op:'println', text:"HELLO WORLD"}
 				],
 			fonts: fontArray,
 			commandNames: [
@@ -225,7 +234,7 @@ function initializeVue() {
 				document.getElementById('mainCanvas').height = window.devicePixelRatio * mainCanvasHeight();
 				document.getElementById('mainCanvas').style.height = `${mainCanvasHeight()}px`;
 
-				processCommands();
+				updateOutput();
 			},
 			addCommand: function() {
 				var obj = {op:this.commandToAdd,id:this.nextId++};
@@ -237,7 +246,7 @@ function initializeVue() {
 				}
 
 				this.commands.push(obj);
-				processCommands();
+				updateOutput();
 
 				this.selectedCommandId = obj.id;
 			},
@@ -248,7 +257,7 @@ function initializeVue() {
 						if (cmd.id == this.selectedCommandId) {
 							mainApp.commands[ii] = mainApp.commands[ii - 1];
 							mainApp.commands[ii - 1] = cmd;
-							processCommands();
+							updateOutput();
 							break;
 						}
 					}
@@ -261,7 +270,7 @@ function initializeVue() {
 						if (cmd.id == this.selectedCommandId) {
 							mainApp.commands[ii] = mainApp.commands[ii + 1];
 							mainApp.commands[ii + 1] = cmd;
-							processCommands();
+							updateOutput();
 							break;
 						}
 					}
@@ -277,7 +286,7 @@ function initializeVue() {
 							cmd2.id = mainApp.nextId++;
 
 							mainApp.commands.splice(ii, 0, cmd2);
-							processCommands();
+							updateOutput();
 							break;
 						}
 					}
@@ -307,7 +316,7 @@ function initializeVue() {
 								else {
 									mainApp.commands = json;
 								}
-								processCommands();
+								updateOutput();
 							}
 							catch(e) {
 
@@ -373,7 +382,7 @@ function initializeVue() {
 							}
 
 							mainApp.commands.splice(ii, 1);
-							processCommands();
+							updateOutput();
 							
 							break;
 						}
@@ -389,7 +398,7 @@ function initializeVue() {
 			deleteAllCommand: function() {
 				mainApp.commands = [];
 				mainApp.selectedCommandId = -1;
-				processCommands();
+				updateOutput();
 			},
 			canvasClick: function(event) {
 				var rect = event.target.getBoundingClientRect();
@@ -414,6 +423,17 @@ function initializeVue() {
 				this.coordinates = '(' + cx + ', ' + cy + ')';
 
 				//console.log("event x=" + x + " y=" + y, event);
+
+				this.objects.push({
+					id: this.nextId++,
+					type: "rect",
+					x: cx,
+					y: cy,
+					w: 20,
+					h: 5
+				});
+				
+				updateOutput();
 			}
 		},
 		watch: {
@@ -448,12 +468,12 @@ function initializeVue() {
 
 					this.updateCanvas();
 					
-					processCommands();
+					updateOutput();
 				}
 			},
 			invertDisplay: {
 				handler(val) {
-					processCommands();
+					updateOutput();
 				}
 			}
 		}
@@ -985,7 +1005,7 @@ function initializeVue() {
 	});
 
 
-	processCommands();
+	updateOutput();
 }
 
 function findCommandById(id) {
@@ -998,8 +1018,25 @@ function findCommandById(id) {
 	return undefined;
 }
 
-function processCommands() {
+function generateCommands() {
+	const commands = [];
+
+	mainApp.objects.forEach(o => {
+		var {x,y,w,h} = o;
+		commands.push({
+			op: "drawRect",
+			color: 1,
+			x,y,w,h
+		})
+	});
+
+	return commands;
+}
+
+function updateOutput() {
 	// console.log('processCommands', mainApp.commands);
+
+	var commands = generateCommands(); //mainApp.commands;
 
 	var codeIncl = '';
 	var codeDecl = '';
@@ -1011,8 +1048,8 @@ function processCommands() {
 	codeImpl += indent + gfxClass + 'clearDisplay();\n';
 	
 	gfx.fillScreen(0);
-	for(var ii = 0; ii < mainApp.commands.length; ii++) {
-		var cmd = mainApp.commands[ii];
+	for(var ii = 0; ii < commands.length; ii++) {
+		var cmd = commands[ii];
 		
 		switch(cmd.op) {
 		case 'writePixel': 
