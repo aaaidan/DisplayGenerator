@@ -4,7 +4,7 @@
 
 var screenx = 128;
 var screeny = 64;
-var zoom = 3;
+var zoom = 4;
 var margin = 4;
 var showMini = true;
 var miniMargin = 2;
@@ -167,6 +167,11 @@ function initializeVue() {
 
 	mainApp = new Vue({
 		el: '#mainApp',
+		mounted: function() {
+			requestAnimationFrame(() => {
+				this.updateCanvas();
+			});
+		},
 		data: {
 			commands: [
 				{id:1, op:'setTextColor', invert:false},
@@ -213,6 +218,15 @@ function initializeVue() {
 			invertDisplay:false
 		},
 		methods: {
+			updateCanvas: function() {
+				document.getElementById('mainCanvas').width = window.devicePixelRatio * totalWidth();
+				document.getElementById('mainCanvas').style.width = `${totalWidth()}px`;
+
+				document.getElementById('mainCanvas').height = window.devicePixelRatio * mainCanvasHeight();
+				document.getElementById('mainCanvas').style.height = `${mainCanvasHeight()}px`;
+
+				processCommands();
+			},
 			addCommand: function() {
 				var obj = {op:this.commandToAdd,id:this.nextId++};
 				var defs = this.commandDefaults[this.commandToAdd];
@@ -431,8 +445,8 @@ function initializeVue() {
 						// 128x64
 						screeny = 64;
 					}
-					
-					document.getElementById('mainCanvas').height = mainCanvasHeight();
+
+					this.updateCanvas();
 					
 					processCommands();
 				}
@@ -445,6 +459,7 @@ function initializeVue() {
 		}
 	});
 
+	window.mainApp = mainApp;
 
 	Vue.component('iconRow', {
 		props: ['name','iconNames'],
@@ -1182,13 +1197,20 @@ function miniCanvasHeight() {
 	return (2 * miniMargin) + screeny + ((mainApp.displayType === 'yellow') ? 1 : 0);
 }
 
+function totalWidth() {
+	return miniCanvasLeft() + miniCanvasWidth();
+}
+
 function render() {
 	// Bytes are left to right, top to bottom, one bit per byte
 	// Within the byte 0x80 is the leftmost pixel, 0x40 is the next, ... 0x01 is the rightmost pixel in the byte
 	var bytes = gfx.getBytes();
 
+	/** @type {HTMLCanvasElement} */
 	var canvas = document.getElementById("mainCanvas");
 	var ctx = canvas.getContext("2d");
+	ctx.resetTransform();
+	ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
 	var yellow = (mainApp.displayType === 'yellow');
 	
@@ -1224,10 +1246,10 @@ function render() {
 				}
 				
 				if (pixel) {
-					ctx.fillRect(mainCanvasX(xx + ii), mainCanvasY(yy), zoom, zoom);
+					ctx.fillRect(mainCanvasX(xx + ii), mainCanvasY(yy), 0.9*zoom, 0.9*zoom);
 
 					if (showMini) {
-						ctx.fillRect(miniCanvasX(xx + ii), miniCanvasY(yy), 1, 1);
+						ctx.fillRect(miniCanvasX(xx + ii), miniCanvasY(yy), 0.9, 0.9);
 					}
 					//console.log("set pixel xx=" + (xx + ii) + " yy=" + yy);
 				}
