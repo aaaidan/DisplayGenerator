@@ -229,11 +229,13 @@ function initializeVue() {
 				this.currentTool = toolname;
 			},
 			updateCanvas: function() {
-				document.getElementById('mainCanvas').width = window.devicePixelRatio * totalWidth();
-				document.getElementById('mainCanvas').style.width = `${totalWidth()}px`;
+				let mainCanvas = document.getElementById('mainCanvas');
+				
+				mainCanvas.width = window.devicePixelRatio * totalWidth();
+				mainCanvas.style.width = `${totalWidth()}px`;
 
-				document.getElementById('mainCanvas').height = window.devicePixelRatio * mainCanvasHeight();
-				document.getElementById('mainCanvas').style.height = `${mainCanvasHeight()}px`;
+				mainCanvas.height = window.devicePixelRatio * mainCanvasHeight();
+				mainCanvas.style.height = `${mainCanvasHeight()}px`;
 
 				updateOutput();
 			},
