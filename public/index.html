@@ -14,33 +14,33 @@ displays (128x64 or 128x32) on Particle devices. You can find out more about thi
 <a href="https://github.com/rickkas7/DisplayGenerator">open source repository</a>.</p>
 
 <form v-on:submit.prevent>
-  <canvas id="mainCanvas" width="640" height="200" v-on:click="canvasClick"></canvas>
+	<canvas id="mainCanvas" width="640" height="200" v-on:click="canvasClick"></canvas>
 
-  <p>
-  	Display Type: <select v-model="displayType">
-  		<option value="normal">128 x 64 (normal)</option>
-  		<option value="short">128 x 32 (short)</option>
-  		<option value="yellow">128 x 64 (yellow and blue)</option>
-  	</select> 
-  	
-  	<input type="checkbox" v-model="invertDisplay" id="invertCheckbox"/><label for="invertCheckbox">Invert Display</label>	
-  	
-  	
-  	&nbsp;&nbsp;&nbsp; 
-  	
-  	{{coordinates}}
-  </p>
+	<p>
+		Display Type: <select v-model="displayType">
+			<option value="normal">128 x 64 (normal)</option>
+			<option value="short">128 x 32 (short)</option>
+			<option value="yellow">128 x 64 (yellow and blue)</option>
+		</select> 
+		
+		<input type="checkbox" v-model="invertDisplay" id="invertCheckbox"/><label for="invertCheckbox">Invert Display</label>	
+		
+		
+		&nbsp;&nbsp;&nbsp; 
+		
+		{{coordinates}}
+	</p>
 
-  <cmd-list
-      v-for="command in commands"
-      v-bind:key="command.id"
-      v-bind:command="command"
-      v-bind:fonts="fonts"
-      v-bind:selected-command-id="selectedCommandId"
-    ></cmd-list>
-    
-    
-    <div>
+	<cmd-list
+		v-for="command in commands"
+		v-bind:key="command.id"
+		v-bind:command="command"
+		v-bind:fonts="fonts"
+		v-bind:selected-command-id="selectedCommandId"
+	></cmd-list>
+
+
+	<div>
 		<p>
 			<button v-on:click="moveUpCommand" :disabled="selectedCommandId < 0">Move Up</button>
 			<button v-on:click="moveDownCommand" :disabled="selectedCommandId < 0">Move Down</button>
@@ -51,11 +51,11 @@ displays (128x64 or 128x32) on Particle devices. You can find out more about thi
 			&nbsp;	
 			<button v-on:click="deleteAllCommand" :disabled="commands.length == 0">Delete All</button>						
 		</p>
-   		<p>Add a command: 
-   			<select v-model="commandToAdd">
+	 		<p>Add a command: 
+	 			<select v-model="commandToAdd">
 			<option v-for="name in commandNames" v-bind:value="name">
-			    {{ name }}
-  			</option>
+				{{ name }}
+				</option>
 			</select>
 			<button v-on:click="addCommand">Add</button>
 		</p>
@@ -66,9 +66,9 @@ displays (128x64 or 128x32) on Particle devices. You can find out more about thi
 			&nbsp;
 			<input type="checkbox" v-model="downloadAppend" id="downloadAppend"/><label for="downloadAppend">Append</label>	
 		</p>
-    </div>
+	</div>
 </form>
-  
+	
 <div id="codeOutput">
 <p>Code:</p>
 <textArea rows="10" cols="100" v-model="codeText" id="codeTextArea" class="code" spellcheck="false">
@@ -81,7 +81,7 @@ displays (128x64 or 128x32) on Particle devices. You can find out more about thi
 
 
 </div> <!-- codeOutput -->
-  
+	
 </div> <!-- mainApp -->
 
 
@@ -95,7 +95,7 @@ displays (128x64 or 128x32) on Particle devices. You can find out more about thi
 		
 		<span v-if="square">Size = <input v-model="size" size="4"></span>
 		<span v-else>Width = <input v-model="width" size="4"> Height = <input v-model="height" size="4"></span>
-		  
+			
 		&nbsp;Weight = <input v-model="weight" size="4">
 		<input type="checkbox" v-model="showCode" id="showCodeCheckbox" /><label for="showCodeCheckbpx">Show code</label></p>
 	</div>
@@ -110,7 +110,7 @@ displays (128x64 or 128x32) on Particle devices. You can find out more about thi
 	</div>
 	<div>
 		<p>Or select a standard logo:
-		    <select v-model="standardLogoSelect">
+			<select v-model="standardLogoSelect">
 			<option value="" selected>Select logo</option>
 			<option value="p128x32">Particle 128x32</option>
 			<option value="p32x32">Particle logo only 32x32</option>
@@ -129,11 +129,11 @@ displays (128x64 or 128x32) on Particle devices. You can find out more about thi
 </form>
 
 <table>
-  <icon-row
-      v-for="name in filteredIconNames"
-      v-bind:key="name"
-      v-bind:name="name"
-    ></icon-row>
+	<icon-row
+		v-for="name in filteredIconNames"
+		v-bind:key="name"
+		v-bind:name="name"
+	></icon-row>
 </table>
 
 
