@@ -20,3 +20,19 @@ textarea.code
 {
 font-family: monospace;
 }
+
+.swatch {
+    display: inline-block;
+}
+
+.tool {
+    padding: 20px;
+    -webkit-appearance: none;
+}
+
+.tool.active {
+    color: red;
+    border-style: inset;
+    background: dodgerblue;
+    color: white;
+}

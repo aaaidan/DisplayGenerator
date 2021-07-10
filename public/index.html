@@ -14,13 +14,20 @@ displays (128x64 or 128x32) on Particle devices. You can find out more about thi
 <a href="https://github.com/rickkas7/DisplayGenerator">open source repository</a>.</p>
 
 <form v-on:submit.prevent>
-	<canvas id="mainCanvas" width="640" height="200" v-on:click="canvasClick"></canvas>
+	<canvas id="mainCanvas" width="640" height="200" v-on:mousemove="canvasMove" v-on:mousedown="canvasMouseDown" v-on:mouseup="canvasMouseUp"></canvas>
 
 	<div style="margin-top: 20px;">
-		Objects:
+		Tools<br />
+		<button v-for="t in tools" class="tool" v-bind:click="clickTool" v-bind:class="{ active: t == currentTool }">{{t}}</button>
+	</div>
+	
+	<div style="margin-top: 20px;">
+		Objects
 		<ul>
 		<li v-for="obj in objects.slice().reverse()">
-			{{ obj.type }}{{ obj.id }} s:{{ obj.strokeColor }} f:{{ obj.fillColor }}
+			{{ obj.type }}{{ obj.id }} 
+			<span v-if="obj.strokeColor !== null" class="swatch" v-bind:style="{ background: obj.strokeColor == 1 ? 'white' : 'black' }"></span>
+			<span v-if="obj.fillColor !== null" class="swatch" v-bind:style="{ background: obj.fillColor == 1 ? 'white' : 'black' }"></span>
 		</li>
 		</ul>
 	</div>
@@ -33,11 +40,7 @@ displays (128x64 or 128x32) on Particle devices. You can find out more about thi
 		</select> 
 		
 		<input type="checkbox" v-model="invertDisplay" id="invertCheckbox"/><label for="invertCheckbox">Invert Display</label>	
-		
-		
-		&nbsp;&nbsp;&nbsp; 
-		
-		{{coordinates}}
+	
 	</div>
 
 	<cmd-list

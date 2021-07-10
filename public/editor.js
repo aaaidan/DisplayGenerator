@@ -219,12 +219,15 @@ function initializeVue() {
 			commandToAdd:'setCursor',
 			codeText:'',
 			selectedCommandId:-1,
-			coordinates:'',
 			downloadAppend:false,
 			displayType:'normal',
 			invertDisplay:false
 		},
 		methods: {
+			clickTool: function(toolname) {
+				console.log(this, toolname);
+				this.currentTool = toolname;
+			},
 			updateCanvas: function() {
 				document.getElementById('mainCanvas').width = window.devicePixelRatio * totalWidth();
 				document.getElementById('mainCanvas').style.width = `${totalWidth()}px`;
@@ -398,19 +401,19 @@ function initializeVue() {
 				mainApp.selectedCommandId = -1;
 				updateOutput();
 			},
-			canvasClick: function(event) {
+			getEventCoords(event) {
 				var rect = event.target.getBoundingClientRect();
 				var x = event.clientX - rect.left;
 				var y = event.clientY - rect.top;
 
-				var cx = Math.round((x - margin) / zoom);
+				var cx = Math.floor((x - margin) / zoom);
 				if (cx < 0) {
 					cx = 0;
 				}
 				if (cx > screenx) {
 					cx = screenx;
 				}
-				var cy = Math.round((y - margin) / zoom);
+				var cy = Math.floor((y - margin) / zoom);
 				if (cy < 0) {
 					cy = 0;
 				}
@@ -418,15 +421,22 @@ function initializeVue() {
 					cy = screeny;
 				}
 
-				this.coordinates = '(' + cx + ', ' + cy + ')';
-
-				//console.log("event x=" + x + " y=" + y, event);
+				return [cx,cy];
+			},
+			canvasMove: function(event) {
+				let coords = this.getEventCoords(event);
+			},
+			canvasMouseDown: function(event) {
+				let coords = this.getEventCoords(event);
+			},
+			canvasMouseUp: function(event) {
+				let coords = this.getEventCoords(event);
 
 				this.objects.push({
 					id: this.nextId++,
 					type: "rect",
-					x: cx,
-					y: cy,
+					x: coords[0],
+					y: coords[1],
 					w: 20,
 					h: 5,
 					strokeColor: 1,
