@@ -179,9 +179,7 @@ function initializeVue() {
 				"text"
 			],
 			currentTool: "rect",
-			objects: [
-				{id: 1, type: "rect", x: 10, y:10, w: 20, h:5, strokeColor:1, fillColor: null }
-			],
+			objects: [],
 			commands: [
 				// {id:1, op:'setTextColor', invert:false},
 				// {id:2, op:'setTextSize', size:"1"},
@@ -430,7 +428,9 @@ function initializeVue() {
 					x: cx,
 					y: cy,
 					w: 20,
-					h: 5
+					h: 5,
+					strokeColor: 1,
+					fillColor: null
 				});
 				
 				updateOutput();
@@ -1024,10 +1024,15 @@ function generateCommands() {
 	mainApp.objects.forEach(o => {
 		var {x,y,w,h} = o;
 		commands.push({
+			op: "fillRect",
+			color: 0,
+			x,y,w,h
+		});
+		commands.push({
 			op: "drawRect",
 			color: 1,
 			x,y,w,h
-		})
+		});
 	});
 
 	return commands;

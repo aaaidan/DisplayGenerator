@@ -16,7 +16,16 @@ displays (128x64 or 128x32) on Particle devices. You can find out more about thi
 <form v-on:submit.prevent>
 	<canvas id="mainCanvas" width="640" height="200" v-on:click="canvasClick"></canvas>
 
-	<p>
+	<div style="margin-top: 20px;">
+		Objects:
+		<ul>
+		<li v-for="obj in objects.slice().reverse()">
+			{{ obj.type }}{{ obj.id }} s:{{ obj.strokeColor }} f:{{ obj.fillColor }}
+		</li>
+		</ul>
+	</div>
+
+	<div style="margin-top: 20px;">
 		Display Type: <select v-model="displayType">
 			<option value="normal">128 x 64 (normal)</option>
 			<option value="short">128 x 32 (short)</option>
@@ -29,7 +38,7 @@ displays (128x64 or 128x32) on Particle devices. You can find out more about thi
 		&nbsp;&nbsp;&nbsp; 
 		
 		{{coordinates}}
-	</p>
+	</div>
 
 	<cmd-list
 		v-for="command in commands"
@@ -38,7 +47,6 @@ displays (128x64 or 128x32) on Particle devices. You can find out more about thi
 		v-bind:fonts="fonts"
 		v-bind:selected-command-id="selectedCommandId"
 	></cmd-list>
-
 
 	<div>
 		<p>
