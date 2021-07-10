@@ -11,6 +11,7 @@ var miniMargin = 2;
 var miniSeparator = 10;
 var yellowTopSize = 16;
 var displayWhite = '#e2fdff';
+var displayBlack = "#111833";
 var displayYellow = '#fdf020';
 var displayBlue = '#4bd3ff';
 
@@ -230,7 +231,7 @@ function initializeVue() {
 			},
 			updateCanvas: function() {
 				let mainCanvas = document.getElementById('mainCanvas');
-				
+
 				mainCanvas.width = window.devicePixelRatio * totalWidth();
 				mainCanvas.style.width = `${totalWidth()}px`;
 
@@ -1278,15 +1279,16 @@ function render() {
 
 	ctx.fillStyle = displayWhite;
 
-
 	var byteIndex = 0;
+	var onColor = displayWhite;
+	
 	for(var yy = 0; yy < screeny; yy++) {
 		if (yellow) {
 			if (yy < yellowTopSize) {
-				ctx.fillStyle = displayYellow;				
+				onColor = displayYellow;				
 			}
 			else {
-				ctx.fillStyle = displayBlue;
+				onColor = displayBlue;
 			}
 		}
 		for(var xx = 0; xx < screenx; xx += 8) {
@@ -1299,13 +1301,10 @@ function render() {
 					pixel = !pixel;
 				}
 				
-				if (pixel) {
-					ctx.fillRect(mainCanvasX(xx + ii), mainCanvasY(yy), 0.9*zoom, 0.9*zoom);
-
-					if (showMini) {
-						ctx.fillRect(miniCanvasX(xx + ii), miniCanvasY(yy), 0.9, 0.9);
-					}
-					//console.log("set pixel xx=" + (xx + ii) + " yy=" + yy);
+				ctx.fillStyle = pixel ? onColor : displayBlack;
+				ctx.fillRect(mainCanvasX(xx + ii), mainCanvasY(yy), 0.9*zoom, 0.9*zoom);
+				if (showMini) {
+					ctx.fillRect(miniCanvasX(xx + ii), miniCanvasY(yy), 0.9, 0.9);
 				}
 			}
 		}
