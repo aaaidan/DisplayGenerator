@@ -105,6 +105,14 @@ function initializeVue() {
 				}
 			},
 			drag: function(app, data) {
+				if (app.selectedObject) {
+					var delta = [
+						data.coords[0] - data.lastCoords[0],
+						data.coords[1] - data.lastCoords[1]
+					];
+					app.selectedObject.x += delta[0];
+					app.selectedObject.y += delta[1];
+				}
 				updateOutput();
 			},
 			mouseup: function(app, data) {
@@ -213,7 +221,8 @@ function initializeVue() {
 				this.currentTool = toolname;
 			},
 			updateCanvas: function() {
-				let mainCanvas = document.getElementById('mainCanvas');
+				let mainCanvas = /** @type {HTMLCanvasElement} */
+					(document.getElementById('mainCanvas'));
 
 				mainCanvas.width = window.devicePixelRatio * totalWidth();
 				mainCanvas.style.width = `${totalWidth()}px`;
@@ -279,7 +288,8 @@ function initializeVue() {
 				}
 			},
 			copyCodeCommand: function() {
-				var copyText = document.getElementById("codeTextArea");
+				var copyText = /** @type {HTMLTextAreaElement} */
+					(document.getElementById("codeTextArea"));
 				copyText.select();
 				document.execCommand("copy");	
 			},
@@ -332,7 +342,11 @@ function initializeVue() {
 			canvasMove: function(event) {
 				let coords = this.getEventCoords(event);
 				if (this.dragging) {
-					this.toolEvent('drag', { coords });
+					this.toolEvent('drag', { 
+						coords,
+						lastCoords: this.lastDragCoords
+					});
+					this.lastDragCoords = coords;
 				} else {
 					this.toolEvent('hover', { coords });
 				}
@@ -341,6 +355,7 @@ function initializeVue() {
 				let coords = this.getEventCoords(event);
 				this.dragging = true;
 				this.toolEvent('mousedown', { coords });
+				this.lastDragCoords = coords;
 			},
 			canvasMouseUp: function(event) {
 				let coords = this.getEventCoords(event);
@@ -405,7 +420,7 @@ function initializeVue() {
 		}
 	});
 
-	window.mainApp = mainApp;
+	window['mainApp'] = mainApp;
 
 	Vue.component('iconRow', {
 		props: ['name','iconNames'],
@@ -772,10 +787,10 @@ function initializeVue() {
 					// Closure to capture the file information.
 					reader.onload = (function(files) {
 						return function(e) {
-							// 
 							this.selectedIconName = '';
 							
-							var iconImg = document.getElementById('iconImg');
+							var iconImg = /** @type {HTMLImageElement} */
+								(document.getElementById('iconImg'));
 							iconImg.style.display = 'block';
 							iconImg.src = e.target.result;
 							setTimeout(function() {
@@ -965,7 +980,7 @@ function generateCommands() {
 	return commands;
 }
 
-function updateOutput() {
+function updateOutput(generateCode = true) {
 	console.log('rendering');
 
 	localStorage.objects = JSON.stringify(mainApp.objects);
@@ -1135,7 +1150,9 @@ function updateOutput() {
 
 	codeImpl += '}\n';
 
-	mainApp.codeText = codeIncl + codeDecl + '\n' + codeImpl;
+	if (generateCode) {
+		mainApp.codeText = codeIncl + codeDecl + '\n' + codeImpl;
+	}
 
 	render();
 }
@@ -1177,8 +1194,8 @@ function render() {
 	// Within the byte 0x80 is the leftmost pixel, 0x40 is the next, ... 0x01 is the rightmost pixel in the byte
 	var bytes = gfx.getBytes();
 
-	/** @type {HTMLCanvasElement} */
-	var canvas = document.getElementById("mainCanvas");
+	var canvas = /** @type {HTMLCanvasElement} */
+		(document.getElementById("mainCanvas"));
 	var ctx = canvas.getContext("2d");
 	ctx.resetTransform();
 	ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
