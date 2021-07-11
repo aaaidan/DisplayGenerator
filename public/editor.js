@@ -100,6 +100,7 @@ function initializeVue() {
 					updateOutput();
 				} else {
 					console.log('nothing found');
+					app.selectedObject = null;
 					return
 				}
 			},
