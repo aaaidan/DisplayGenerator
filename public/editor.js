@@ -2,7 +2,7 @@
 // Repository: https://github.com/rickkas7/DisplayGenerator
 // License: MIT
 
-import feltCuteMightDeleteLater from './template.js'
+import cmdListTemplate from './cmd-list-template.js'
 
 var screenx = 128;
 var screeny = 64;
@@ -47,7 +47,7 @@ function initializeVue() {
 		mounted: function() {
 			this.selectedCmd = this.selectedCommandId;
 		},
-		template: feltCuteMightDeleteLater,
+		template: cmdListTemplate,
 		watch: {
 			$props: {
 				handler(val) {			
