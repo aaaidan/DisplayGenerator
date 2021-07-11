@@ -22,7 +22,7 @@ var mainApp;
 var iconApp;
 var selectedCmd;
 
-window.Module.onRuntimeInitialized = function() {
+Module.onRuntimeInitialized = function() {
 	console.log('Enscripten loaded!');
 	
 	// Create an Adafruit GFX 1-bit deep bitmap of screenx x screeny pixels
@@ -31,7 +31,7 @@ window.Module.onRuntimeInitialized = function() {
 	
 	gfx = new Module.TestGFX(screenx, screeny);
 	console.log("yeuhhhh");
-	window.main = Module;
+	window['main'] = Module;
 	initializeVue();
 }
 
@@ -114,7 +114,7 @@ function initializeVue() {
 			currentRect: null,
 			mousedown: function(app, data) {
 				toolPlugins.rect.currentRect = {
-					id: this.nextId++,
+					id: app.nextId++,
 					type: "rect",
 					x: data.coords[0],
 					y: data.coords[1],
@@ -859,7 +859,8 @@ function initializeVue() {
 				}
 				// console.log("selectIcon " + this.selectedIconName + " size=" + size);
 
-				var canvas = document.getElementById("iconCanvas");
+				var canvas = /** @type {HTMLCanvasElement} */
+					(document.getElementById("iconCanvas"));
 
 				var ctx = canvas.getContext("2d");
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1212,7 +1213,7 @@ function render() {
 				var pixel = ((pixel8 & (1 << (7 - ii))) != 0) ? 1 : 0;
 				
 				if (mainApp.invertDisplay) {
-					pixel = !pixel;
+					pixel = Number(!pixel);
 				}
 				
 				ctx.fillStyle = pixel ? onColor : displayBlack;
