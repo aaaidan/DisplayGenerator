@@ -1,7 +1,8 @@
 <html>
 <head>
 <title>Display Generator</title>
-<script type="text/javascript" src="editor.js"></script>
+<script>window.Module = {}</script>
+<script type="module" src="editor.js"></script>
 <link rel="stylesheet" href="editor.css">
 </head>
 <body>
@@ -14,7 +15,7 @@
 
 	<div style="margin-top: 20px;">
 		Tools<br />
-		<button v-for="t in tools" class="tool" v-bind:click="clickTool" v-bind:class="{ active: t == currentTool }">{{t}}</button>
+		<button v-for="t in tools" class="tool" v-on:click="clickTool(t)" v-bind:class="{ active: t == currentTool }">{{t}}</button>
 	</div>
 	
 	<div style="margin-top: 20px;">
@@ -39,39 +40,13 @@
 	
 	</div>
 
-	<cmd-list
-		v-for="command in commands"
-		v-bind:key="command.id"
-		v-bind:command="command"
-		v-bind:fonts="fonts"
-		v-bind:selected-command-id="selectedCommandId"
-	></cmd-list>
-
 	<div>
 		<p>
-			<button v-on:click="moveUpCommand" :disabled="selectedCommandId < 0">Move Up</button>
-			<button v-on:click="moveDownCommand" :disabled="selectedCommandId < 0">Move Down</button>
-			&nbsp;	
-			<button v-on:click="copyCommand" :disabled="selectedCommandId < 0">Duplicate</button>
-			<button v-on:click="deleteCommand" :disabled="selectedCommandId < 0">Delete</button>
-			&nbsp;	
-			&nbsp;	
-			<button v-on:click="deleteAllCommand" :disabled="commands.length == 0">Delete All</button>						
-		</p>
-	 		<p>Add a command: 
-	 			<select v-model="commandToAdd">
-			<option v-for="name in commandNames" v-bind:value="name">
-				{{ name }}
-				</option>
-			</select>
-			<button v-on:click="addCommand">Add</button>
-		</p>
-		<p>
-			<button v-on:click="downloadCommand">Save Layout</button>
+			<button v-on:click="downloadCommand">Save</button>
 			&nbsp;
-			Load Layout: <input type="file" id="files" name="files" accept="text/*, application/json, *.json" v-on:change="uploadCommand"/>
+			<label><button onclick="console.log(event.currentTarget.parentElement.querySelector(''))">Load</button><input style="visibility: hidden" type="file" name="files" accept="text/*, application/json, *.json" v-on:change="uploadCommand"/></label>
 			&nbsp;
-			<input type="checkbox" v-model="downloadAppend" id="downloadAppend"/><label for="downloadAppend">Append</label>	
+			<input type="checkbox" v-model="placeIntoDocument" id="placeIntoDocument"/><label for="placeIntoDocument">Keep existing layout</label>	
 		</p>
 	</div>
 </form>
@@ -113,7 +88,7 @@
 	</div>
 	<div>
 		<p>Upload and convert image file: 
-		<input type="file" id="files" name="files" accept="image/*, *.gif, *.jpg, *.jpeg, *.png, *.svg" v-on:change="uploadIconCommand"/></p>
+		<input type="file" name="files" accept="image/*, *.gif, *.jpg, *.jpeg, *.png, *.svg" v-on:change="uploadIconCommand"/></p>
 	</div>
 	<div>
 		<p>Or select a standard logo:

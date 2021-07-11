@@ -2,6 +2,8 @@
 // Repository: https://github.com/rickkas7/DisplayGenerator
 // License: MIT
 
+import feltCuteMightDeleteLater from './template.js'
+
 var screenx = 128;
 var screeny = 64;
 var zoom = 4;
@@ -20,18 +22,18 @@ var mainApp;
 var iconApp;
 var selectedCmd;
 
-var Module = {
-		onRuntimeInitialized: function() {
-			// console.log('Enscripten loaded!');
-			
-			// Create an Adafruit GFX 1-bit deep bitmap of screenx x screeny pixels
-			// Note: when using the short display the GFX screen size is still set at
-			// 128x64, it's just the bottom half isn't rendered to the screen.
-			gfx = new Module.TestGFX(screenx, screeny);
-
-			initializeVue();	
-		}
-};
+window.Module.onRuntimeInitialized = function() {
+	console.log('Enscripten loaded!');
+	
+	// Create an Adafruit GFX 1-bit deep bitmap of screenx x screeny pixels
+	// Note: when using the short display the GFX screen size is still set at
+	// 128x64, it's just the bottom half isn't rendered to the screen.
+	
+	gfx = new Module.TestGFX(screenx, screeny);
+	console.log("yeuhhhh");
+	window.main = Module;
+	initializeVue();
+}
 
 function initializeVue() {
 
@@ -45,116 +47,25 @@ function initializeVue() {
 		mounted: function() {
 			this.selectedCmd = this.selectedCommandId;
 		},
-		template: `
-			<div>
-			<p><input type="radio" v-bind:value="command.id" v-on:change="radioChanged" name="selectedCmd" v-model="selectedCmd" />
-			<span v-if="command.op === 'writePixel'">
-			writePixel: x = <input v-model="command.x" size="4"> y = <input v-model="command.y" size="4"> 
-			color = <input v-model="command.color" size="4">
-			</span>
-			<span v-if="command.op === 'drawLine'">
-			drawLine: x0 = <input v-model="command.x0" size="4"> y0 = <input v-model="command.y0" size="4"> 
-			x1 = <input v-model="command.x1" size="4"> y1 = <input v-model="command.y1" size="4">
-			color = <input v-model="command.color" size="4">
-			</span>
-			<span v-if="command.op === 'drawRect'">
-			drawRect: x = <input v-model="command.x" size="4"> y = <input v-model="command.y" size="4"> 
-			w = <input v-model="command.w" size="4"> h = <input v-model="command.h" size="4">
-			color = <input v-model="command.color" size="4">
-			</span>
-			<span v-if="command.op === 'fillRect'">
-			fillRect: x = <input v-model="command.x" size="4"> y = <input v-model="command.y" size="4"> 
-			w = <input v-model="command.w" size="4"> h = <input v-model="command.h" size="4">
-			color = <input v-model="command.color" size="4">
-			</span>
-			<span v-if="command.op === 'drawRoundRect'">
-			drawRoundRect: x = <input v-model="command.x" size="4"> y = <input v-model="command.y" size="4"> 
-			w = <input v-model="command.w" size="4"> h = <input v-model="command.h" size="4">
-			r = <input v-model="command.r" size="4"> color = <input v-model="command.color" size="4">
-			</span>
-			<span v-if="command.op === 'fillRoundRect'">
-			fillRoundRect: x = <input v-model="command.x" size="4"> y = <input v-model="command.y" size="4"> 
-			w = <input v-model="command.w" size="4"> h = <input v-model="command.h" size="4">
-			r = <input v-model="command.r" size="4"> color = <input v-model="command.color" size="4">
-			</span>
-			<span v-if="command.op === 'drawCircle'">
-			drawCircle: x = <input v-model="command.x" size="4"> y = <input v-model="command.y" size="4"> 
-			r = <input v-model="command.r" size="4"> 
-			color = <input v-model="command.color" size="4">
-			</span>
-			<span v-if="command.op === 'fillCircle'">
-			fillCircle: x = <input v-model="command.x" size="4"> y = <input v-model="command.y" size="4"> 
-			r = <input v-model="command.r" size="4"> 
-			color = <input v-model="command.color" size="4">
-			</span>
-			<span v-if="command.op === 'drawTriangle'">
-			drawTriangle: x0 = <input v-model="command.x0" size="4"> y0 = <input v-model="command.y0" size="4"> 
-			x1 = <input v-model="command.x1" size="4"> y1 = <input v-model="command.y1" size="4">
-			x2 = <input v-model="command.x2" size="4"> y2 = <input v-model="command.y2" size="4">
-			color = <input v-model="command.color" size="4">
-			</span>
-			<span v-if="command.op === 'fillTriangle'">
-			fillTriangle: x0 = <input v-model="command.x0" size="4"> y0 = <input v-model="command.y0" size="4"> 
-			x1 = <input v-model="command.x1" size="4"> y1 = <input v-model="command.y1" size="4">
-			x2 = <input v-model="command.x2" size="4"> y2 = <input v-model="command.y2" size="4">
-			color = <input v-model="command.color" size="4">
-			</span>
-			<span v-if="command.op === 'setCursor'">
-			setCursor: x = <input v-model="command.x" size="4"> y = <input v-model="command.y" size="4"> 
-			</span>
-			<span v-if="command.op === 'setFont'">
-			setFont: 
-			<select v-model="command.font">
-			<option v-for="font in fonts" v-bind:value="font">
-			{{ font }}
-			</option>
-			</select>
-			</span>
-			<span v-if="command.op === 'setTextColor'">
-			setTextColor: <input type="checkbox" v-model="command.invert"/>Inverted Color (only works for default font)
-			</span>
-			<span v-if="command.op === 'setTextSize'">
-			setTextSize: size = <input v-model="command.size" size="4">
-			</span>
-			<span v-if="command.op === 'setTextWrap'">
-			setTextWrap: w = <input v-model="command.w" size="4"> (0 = no wrap, 1 = wrap. Default is no wrap.)
-			</span>
-			<span v-if="command.op === 'print'">
-			print: <input v-model="command.text" size="20">
-			</span>
-			<span v-if="command.op === 'println'">
-			println: <input v-model="command.text" size="20">
-			</span>
-			<span v-if="command.op === 'printCentered'">
-			printCentered: <input v-model="command.text" size="20"> width = {{command.width}}
-			</span>
-			<span v-if="command.op === 'drawIcon'">
-			drawIcon: x = <input v-model="command.x" size="4"> y = <input v-model="command.y" size="4"> 
-			color = <input v-model="command.color" size="4">
-			width = {{command.width}} height= {{command.height}} <br/> 
-			bitmap = <input v-model="command.bitmap" size="50">
-			</span>
-			</p>
-			</div>
-			`,
-			watch: {
-				$props: {
-					handler(val) {			
-						updateOutput();
-					},
-					deep: true
+		template: feltCuteMightDeleteLater,
+		watch: {
+			$props: {
+				handler(val) {			
+					updateOutput();
 				},
-				selectedCommandId: {
-					handler(val) {
-						this.selectedCmd = this.command.id.toString();
-					}
-				}
+				deep: true
 			},
-			methods: {
-				radioChanged: function() {
-					mainApp.selectedCommandId = this.selectedCmd;
+			selectedCommandId: {
+				handler(val) {
+					this.selectedCmd = this.command.id.toString();
 				}
 			}
+		},
+		methods: {
+			radioChanged: function() {
+				mainApp.selectedCommandId = this.selectedCmd;
+			}
+		}
 	});
 
 	var fontArray = [];
@@ -166,12 +77,83 @@ function initializeVue() {
 		fontArray.push(name);
 	}
 
+
+	const toolPlugins = {
+		"select": {
+			findTopObjectAt: function(objects, coords) {
+				let [x,y] = coords;
+				return objects.slice().reverse().find(o => {
+					return (
+						o.x <= x && 
+						o.y <= y && 
+						o.x + o.w > x &&
+						o.y + o.h > y
+					);
+				});
+			},
+			hover: function(app, data) {
+			},
+			mousedown: function(app, data) {
+				let obj = toolPlugins.select.findTopObjectAt(app.objects, data.coords);
+				if (obj) {
+					app.selectedObject = app.objects.find(v => v == obj);
+					updateOutput();
+				} else {
+					console.log('nothing found');
+					return
+				}
+			},
+			drag: function(app, data) {
+				updateOutput();
+			},
+			mouseup: function(app, data) {
+				updateOutput();
+			},
+		},
+		"rect": {
+			currentRect: null,
+			mousedown: function(app, data) {
+				toolPlugins.rect.currentRect = {
+					id: this.nextId++,
+					type: "rect",
+					x: data.coords[0],
+					y: data.coords[1],
+					w: 1,
+					h: 1,
+					strokeColor: 1,
+					fillColor: null
+				};
+				app.objects.push(toolPlugins.rect.currentRect);
+				updateOutput();
+			},
+			drag: function(app, data) {
+				let currentRect = toolPlugins.rect.currentRect;
+				currentRect.w = data.coords[0] - currentRect.x + 1;
+				currentRect.h = data.coords[1] - currentRect.y + 1;
+				updateOutput();
+			},
+			mouseup: function(app, data) {
+				toolPlugins.rect.currentRect = null;
+			},
+		},
+	}
+
 	mainApp = new Vue({
 		el: '#mainApp',
 		mounted: function() {
 			requestAnimationFrame(() => {
 				this.updateCanvas();
 			});
+			window.addEventListener('mouseup', () => {
+				this.toolEvent('mouseup', {}); // no coords outside of canvas
+			});
+			try {
+				if (localStorage.objects) {
+					this.objects = JSON.parse(localStorage.objects);
+				}
+			} catch(e) {
+				console.error("Failed to revive.")
+			}
 		},
 		data: {
 			tools: [
@@ -180,7 +162,9 @@ function initializeVue() {
 				"text"
 			],
 			currentTool: "rect",
+			dragging: false,
 			objects: [],
+			selectedObject: null,
 			commands: [
 				// {id:1, op:'setTextColor', invert:false},
 				// {id:2, op:'setTextSize', size:"1"},
@@ -217,16 +201,14 @@ function initializeVue() {
 				drawIcon:{x:"0", y:"0", size:"24", width:"24", height:"24", color:"1", bitmap:""}
 			},
 			nextId:6,
-			commandToAdd:'setCursor',
 			codeText:'',
 			selectedCommandId:-1,
-			downloadAppend:false,
+			placeIntoDocument: false, // If true, insert loaded data into existing document. Otherwise replace.
 			displayType:'normal',
 			invertDisplay:false
 		},
 		methods: {
 			clickTool: function(toolname) {
-				console.log(this, toolname);
 				this.currentTool = toolname;
 			},
 			updateCanvas: function() {
@@ -239,62 +221,6 @@ function initializeVue() {
 				mainCanvas.style.height = `${mainCanvasHeight()}px`;
 
 				updateOutput();
-			},
-			addCommand: function() {
-				var obj = {op:this.commandToAdd,id:this.nextId++};
-				var defs = this.commandDefaults[this.commandToAdd];
-				for (var prop in defs) {
-					if (defs.hasOwnProperty(prop)) {
-						obj[prop] = defs[prop];
-					}
-				}
-
-				this.commands.push(obj);
-				updateOutput();
-
-				this.selectedCommandId = obj.id;
-			},
-			moveUpCommand: function() {
-				if (this.selectedCommandId > 0) {
-					for(var ii = 1; ii < mainApp.commands.length - 1; ii++) {
-						var cmd = mainApp.commands[ii];
-						if (cmd.id == this.selectedCommandId) {
-							mainApp.commands[ii] = mainApp.commands[ii - 1];
-							mainApp.commands[ii - 1] = cmd;
-							updateOutput();
-							break;
-						}
-					}
-				}
-			},
-			moveDownCommand: function() {
-				if (this.selectedCommandId > 0) {
-					for(var ii = 0; ii < mainApp.commands.length - 1; ii++) {
-						var cmd = mainApp.commands[ii];
-						if (cmd.id == this.selectedCommandId) {
-							mainApp.commands[ii] = mainApp.commands[ii + 1];
-							mainApp.commands[ii + 1] = cmd;
-							updateOutput();
-							break;
-						}
-					}
-				}
-			},
-			copyCommand: function() {
-				if (this.selectedCommandId > 0) {
-					for(var ii = 0; ii < mainApp.commands.length; ii++) {
-						var cmd = mainApp.commands[ii];
-						if (cmd.id == this.selectedCommandId) {
-							var cmd2 = {};
-							Object.assign(cmd2, cmd);
-							cmd2.id = mainApp.nextId++;
-
-							mainApp.commands.splice(ii, 0, cmd2);
-							updateOutput();
-							break;
-						}
-					}
-				}
 			},
 			uploadCommand: function(event) {
 				var files = event.target.files;
@@ -311,7 +237,7 @@ function initializeVue() {
 							try {
 								var json = JSON.parse(e.target.result);
 								
-								if (mainApp.downloadAppend) {
+								if (mainApp.placeIntoDocument) {
 									for(var ii = 0; ii < json.length; ii++) {
 										json[ii].id = mainApp.nextId++;
 										mainApp.commands.push(json[ii]);										
@@ -374,36 +300,6 @@ function initializeVue() {
 					}, 0); 
 				}
 			},
-			deleteCommand: function() {
-				if (this.selectedCommandId > 0) {
-					var nextId = -1;
-					
-					for(var ii = 0; ii < mainApp.commands.length; ii++) {
-						var cmd = mainApp.commands[ii];
-						if (cmd.id == this.selectedCommandId) {
-							if ((ii + 1) < mainApp.commands.length) {
-								nextId = mainApp.commands[ii + 1].id;
-							}
-
-							mainApp.commands.splice(ii, 1);
-							updateOutput();
-							
-							break;
-						}
-					}
-					if (nextId >= 0) {
-						this.selectedCommandId = nextId;
-					}
-					else {
-						this.selectedCommandId = -1;
-					}
-				}
-			},
-			deleteAllCommand: function() {
-				mainApp.commands = [];
-				mainApp.selectedCommandId = -1;
-				updateOutput();
-			},
 			getEventCoords(event) {
 				var rect = event.target.getBoundingClientRect();
 				var x = event.clientX - rect.left;
@@ -426,27 +322,43 @@ function initializeVue() {
 
 				return [cx,cy];
 			},
+			toolEvent: function(eventName, data) {
+				const currentToolPlugin = toolPlugins[this.currentTool];
+				if (currentToolPlugin[eventName]) { 
+					currentToolPlugin[eventName](this, data);
+				}
+			},
 			canvasMove: function(event) {
 				let coords = this.getEventCoords(event);
+				if (this.dragging) {
+					this.toolEvent('drag', { coords });
+				} else {
+					this.toolEvent('hover', { coords });
+				}
 			},
 			canvasMouseDown: function(event) {
 				let coords = this.getEventCoords(event);
+				this.dragging = true;
+				this.toolEvent('mousedown', { coords });
 			},
 			canvasMouseUp: function(event) {
 				let coords = this.getEventCoords(event);
+				this.dragging = false;
 
-				this.objects.push({
-					id: this.nextId++,
-					type: "rect",
-					x: coords[0],
-					y: coords[1],
-					w: 20,
-					h: 5,
-					strokeColor: 1,
-					fillColor: null
-				});
+				this.toolEvent('mouseup', { coords });
+
+				// this.objects.push({
+				// 	id: this.nextId++,
+				// 	type: "rect",
+				// 	x: coords[0],
+				// 	y: coords[1],
+				// 	w: 20,
+				// 	h: 5,
+				// 	strokeColor: 1,
+				// 	fillColor: null
+				// });
 				
-				updateOutput();
+				// updateOutput();
 			}
 		},
 		watch: {
@@ -834,7 +746,7 @@ function initializeVue() {
 				var search = this.search;
 
 				return this.iconNames.filter(function(name) {
-					if (this.search != '') {
+					if (search != '') {
 						return (name.indexOf(search) >= 0);
 					}
 					else {
@@ -1052,7 +964,9 @@ function generateCommands() {
 }
 
 function updateOutput() {
-	// console.log('processCommands', mainApp.commands);
+	console.log('rendering');
+
+	localStorage.objects = JSON.stringify(mainApp.objects);
 
 	var commands = generateCommands(); //mainApp.commands;
 
@@ -1307,6 +1221,19 @@ function render() {
 					ctx.fillRect(miniCanvasX(xx + ii), miniCanvasY(yy), 0.9, 0.9);
 				}
 			}
+		}
+	}
+	const selectedObj = mainApp.selectedObject;
+	if (selectedObj) {
+		if (selectedObj.type == "rect") {
+			ctx.strokeStyle = "orange";
+			ctx.lineWidth = 1.8;
+			ctx.strokeRect(
+				mainCanvasX( mainApp.selectedObject.x + 0.5 * 0.9 ),
+				mainCanvasY( mainApp.selectedObject.y + 0.5 * 0.9 ),
+				mainCanvasX( mainApp.selectedObject.w - 3),
+				mainCanvasY( mainApp.selectedObject.h - 3)
+			);
 		}
 	}
 }
