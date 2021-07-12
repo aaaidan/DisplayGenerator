@@ -2,7 +2,11 @@
 // Repository: https://github.com/rickkas7/DisplayGenerator
 // License: MIT
 
-import cmdListTemplate from './cmd-list-template.js'
+// @ts-ignore
+import debounce from 'https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/debounce.js';
+
+// import throttle from './lodash-es/throttle.js'
+// window['t'] = throttle;
 
 var screenx = 128;
 var screeny = 64;
@@ -22,51 +26,27 @@ var mainApp;
 var iconApp;
 var selectedCmd;
 
-Module.onRuntimeInitialized = function() {
-	console.log('Enscripten loaded!');
-	
+function go() {
 	// Create an Adafruit GFX 1-bit deep bitmap of screenx x screeny pixels
 	// Note: when using the short display the GFX screen size is still set at
 	// 128x64, it's just the bottom half isn't rendered to the screen.
 	
-	gfx = new Module.TestGFX(screenx, screeny);
+	gfx = new Module['TestGFX'](screenx, screeny);
 	console.log("yeuhhhh");
 	window['main'] = Module;
 	initializeVue();
 }
 
-function initializeVue() {
+Module.onRuntimeInitialized = function() {
+	console.log('Enscripten loaded!');
+	
+	go();
+}
+if (Module['TestGFX']) {
+	go();
+}
 
-	Vue.component('cmd-list', {
-		data: function() {
-			return {
-				selectedCmd:''
-			};
-		},
-		props: ['command','fonts','selectedCommandId'],
-		mounted: function() {
-			this.selectedCmd = this.selectedCommandId;
-		},
-		template: cmdListTemplate,
-		watch: {
-			$props: {
-				handler(val) {			
-					updateOutput();
-				},
-				deep: true
-			},
-			selectedCommandId: {
-				handler(val) {
-					this.selectedCmd = this.command.id.toString();
-				}
-			}
-		},
-		methods: {
-			radioChanged: function() {
-				mainApp.selectedCommandId = this.selectedCmd;
-			}
-		}
-	});
+function initializeVue() {
 
 	var fontArray = [];
 	var fontVector = gfx.getFonts();
@@ -76,7 +56,6 @@ function initializeVue() {
 		var name = fontVector.get(ii);
 		fontArray.push(name);
 	}
-
 
 	const toolPlugins = {
 		"select": {
@@ -157,11 +136,13 @@ function initializeVue() {
 				this.toolEvent('mouseup', {}); // no coords outside of canvas
 			});
 			try {
-				if (localStorage.objects) {
-					this.objects = JSON.parse(localStorage.objects);
+				if (localStorage.savedEditorState) {
+					const savedState = JSON.parse(localStorage.savedEditorState);
+					this.objects = savedState.objects;
+					this.nextId = savedState.nextId;
 				}
 			} catch(e) {
-				console.error("Failed to revive.")
+				console.error("Failed to revive.", e)
 			}
 		},
 		data: {
@@ -980,10 +961,23 @@ function generateCommands() {
 	return commands;
 }
 
-function updateOutput(generateCode = true) {
-	console.log('rendering');
+function nextAnimationFrame() {
+	return new Promise(res => {
+		requestAnimationFrame(() => res());
+	})
+}
 
-	localStorage.objects = JSON.stringify(mainApp.objects);
+var debouncedGenerateCode = debounce(() => {
+	updateOutput(true);
+}, 500, { leading: false, trailing: true });
+
+async function updateOutput(generateCode = false) {
+	console.log('rendering', generateCode ? "with" : "without" , "code");
+
+	localStorage.savedEditorState = JSON.stringify({
+		objects: mainApp.objects,
+		nextId: mainApp.nextId
+	});
 
 	var commands = generateCommands(); //mainApp.commands;
 
@@ -1154,7 +1148,11 @@ function updateOutput(generateCode = true) {
 		mainApp.codeText = codeIncl + codeDecl + '\n' + codeImpl;
 	}
 
+	await nextAnimationFrame();
+
 	render();
+
+	debouncedGenerateCode(); // queue up code regen
 }
 
 function mainCanvasX(x) {
