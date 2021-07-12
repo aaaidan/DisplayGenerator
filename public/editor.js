@@ -72,24 +72,40 @@ function initializeVue() {
 			},
 			mousedown: function(app, data) {
 				let obj = toolPlugins.select.findTopObjectAt(app.objects, data.coords);
-				if (obj) {
-					app.selectedObject = app.objects.find(v => v == obj);
-					updateOutput();
+				if (data.event.shiftKey) {
+					if (obj) {
+						if (app.selectedObjects.includes(obj)) {
+							app.selectedObjects = app.selectedObjects.filter(o => o !== obj);
+							updateOutput();
+						} else {
+							app.selectedObjects.push(obj);
+							updateOutput();
+						}
+					} else {
+						// shrug
+					}
 				} else {
-					console.log('nothing found');
-					app.selectedObject = null;
-					return
+					if (obj) {
+						if (!app.selectedObjects.includes(obj)) {
+							app.selectedObject = app.objects.find(v => v == obj);
+							updateOutput();
+						}
+					} else {
+						console.log('nothing found');
+						app.selectedObject = null;
+						updateOutput();
+					}
 				}
 			},
 			drag: function(app, data) {
-				if (app.selectedObject) {
-					var delta = [
-						data.coords[0] - data.lastCoords[0],
-						data.coords[1] - data.lastCoords[1]
-					];
-					app.selectedObject.x += delta[0];
-					app.selectedObject.y += delta[1];
-				}
+				var delta = [
+					data.coords[0] - data.lastCoords[0],
+					data.coords[1] - data.lastCoords[1]
+				];
+				app.selectedObjects.forEach(selectedObject => {
+					selectedObject.x += delta[0];
+					selectedObject.y += delta[1];
+				});
 				updateOutput();
 			},
 			mouseup: function(app, data) {
@@ -121,7 +137,6 @@ function initializeVue() {
 			},
 			mouseup: function(app, data) {
 				app.selectedObject = toolPlugins.rect.currentRect;
-				console.log("mouseup", app.selectedObject);
 				toolPlugins.rect.currentRect = null;
 				updateOutput();
 			},
@@ -134,13 +149,31 @@ function initializeVue() {
 			requestAnimationFrame(() => {
 				this.updateCanvas();
 			});
-			window.addEventListener('mouseup', () => {
-				this.toolEvent('mouseup', {}); // no coords outside of canvas
+			window.addEventListener('mouseup', (event) => {
+				this.toolEvent('mouseup', { event }); // no coords outside of canvas
 			});
 			window.addEventListener('keydown', (e) => {
-				// console.log(e.key);
-				if (e.key == "Delete" || e.key == "Backspace") {
-					this.deleteObject(this.selectedObject);
+				console.log(e.key, e.code);
+				switch(e.code) {
+				case "Delete":
+				case "Backspace": 
+					this.deleteObject(this.selectedObjects);
+					break;
+
+				case "BracketLeft":
+					if (e.shiftKey) {
+						this.moveToBack(this.selectedObjects);
+					} else {
+						this.moveBack(this.selectedObjects);
+					}
+					break;
+				case "BracketRight":
+					if (e.shiftKey) {
+						this.moveToFront(this.selectedObjects);
+					} else {
+						this.moveForward(this.selectedObjects);
+					}
+					break;
 				}
 			});
 			try {
@@ -157,12 +190,23 @@ function initializeVue() {
 				console.error("Failed to revive.", e)
 			}
 		},
+		computed: {
+			selectedObject: {
+				get: function() {
+					console.warn("getting selectedObject...");
+					return this.selectedObjects[0];
+				},
+				set: function(val) {
+					this.selectedObjects = val ? [val] : [];
+				}
+			}
+		},
 		data: {
 			tools: Object.keys(toolPlugins),
 			currentTool: "rect",
 			dragging: false,
 			objects: [],
-			selectedObject: null,
+			selectedObjects: [],
 			commands: [
 				// {id:1, op:'setTextColor', invert:false},
 				// {id:2, op:'setTextSize', size:"1"},
@@ -206,11 +250,68 @@ function initializeVue() {
 			invertDisplay:false
 		},
 		methods: {
-			deleteObject: function(obj) {
-				this.objects = this.objects.filter(o => o !== obj);
-				if (this.selectedObject === obj) {
+			deleteObject: function(objs) {
+				this.objects = this.objects.filter(o => !objs.includes(o));
+				if (objs.includes(this.selectedObject)) {
 					this.selectedObject = null;
 				}
+				updateOutput();
+			},
+			moveBack: function(objs) {
+				// Moving a potentially discontiguous set of objects might be 
+				// tricky and cause unexpected results. So we're just going to
+				// insert them all in one clump behind the object below the 
+				// lowest in `objs`.
+
+				// Calc list of tuples with obj and its original docIndex, 
+				// ordered by that index. (Low index at [0].)
+				let objStack = objs.map(obj => ({
+					obj,
+					docIndex: this.objects.findIndex(o => o === obj)
+				})).sort((a,b) => a.docIndex - b.docIndex);
+				
+				console.log(objStack);
+
+				if (objStack[0].docIndex == 0) {
+					// bottom of group is already at bottom.
+					// we'll just make sure it's contiguous and stick it all at the bottom.
+					const cattle = this.objects.filter(o => !objs.includes(o));
+					const pets = objStack.map(info => info.obj);
+					console.log("bump", pets, cattle);
+					this.objects = [...pets, ...cattle];
+				} else {
+					// clump em together below the element with the lowest docIndex
+					const insertBelowTargetObject = this.objects[objStack[0].docIndex - 1];
+
+					const cattle = this.objects.filter(o => !objs.includes(o));
+					// Split the cattle so the pets can fit in the middle
+					const targetObjectCattleIndex = cattle.findIndex(o => o === insertBelowTargetObject);
+					const low  = cattle.slice(0, targetObjectCattleIndex);
+					const high = cattle.slice(targetObjectCattleIndex);
+
+					const pets = objStack.map(info => info.obj);
+
+					console.log("slough", low, pets, high);
+					
+					this.objects = [...low, ...pets, ...high];
+					
+					// :sweatsmile:
+				}
+				updateOutput();
+			},
+			moveForward: function(objs) {
+
+			},
+			moveToBack: function(objs) {
+				console.log("back", objs);
+				this.objects = this.objects.filter(o => !objs.includes(o));
+				this.objects.unshift(...objs);
+				updateOutput();
+			},
+			moveToFront: function(objs) {
+				console.log("front", objs);
+				this.objects = this.objects.filter(o => !objs.includes(o));
+				this.objects.push(...objs);
 				updateOutput();
 			},
 			clickTool: function(toolname) {
@@ -338,18 +439,18 @@ function initializeVue() {
 				let coords = this.getEventCoords(event);
 				if (this.dragging) {
 					this.toolEvent('drag', { 
-						coords,
+						coords, event,
 						lastCoords: this.lastDragCoords
 					});
 					this.lastDragCoords = coords;
 				} else {
-					this.toolEvent('hover', { coords });
+					this.toolEvent('hover', { coords, event });
 				}
 			},
 			canvasMouseDown: function(event) {
 				let coords = this.getEventCoords(event);
 				this.dragging = true;
-				this.toolEvent('mousedown', { coords });
+				this.toolEvent('mousedown', { coords, event });
 				this.lastDragCoords = coords;
 			},
 			canvasMouseUp: /** @param {MouseEvent} event */ function(event) {
@@ -358,7 +459,7 @@ function initializeVue() {
 
 				event.stopImmediatePropagation();
 
-				this.toolEvent('mouseup', { coords });
+				this.toolEvent('mouseup', { coords, event });
 
 				// this.objects.push({
 				// 	id: this.nextId++,
@@ -1261,19 +1362,30 @@ function render() {
 			}
 		}
 	}
-	const selectedObj = mainApp.selectedObject;
-	if (selectedObj) {
-		if (selectedObj.type == "rect") {
-			ctx.strokeStyle = "orange";
-			ctx.lineWidth = 1.8;
+	mainApp.objects.forEach(obj => {
+		if (obj.type == "rect") {
+			ctx.strokeStyle = "#fff3";
+			ctx.lineWidth = zoom * 0.25;
 			ctx.strokeRect(
-				mainCanvasX( mainApp.selectedObject.x + 0.5 * 0.9 ),
-				mainCanvasY( mainApp.selectedObject.y + 0.5 * 0.9 ),
-				mainCanvasX( mainApp.selectedObject.w - 3),
-				mainCanvasY( mainApp.selectedObject.h - 3)
+				mainCanvasX( obj.x + 0.5 * 0.9 ),
+				mainCanvasY( obj.y + 0.5 * 0.9 ),
+				mainCanvasX( obj.w - 3),
+				mainCanvasY( obj.h - 3)
 			);
 		}
-	}
+	});
+	mainApp.selectedObjects.forEach(selectedObj => {
+		if (selectedObj.type == "rect") {
+			ctx.strokeStyle = "#f80";
+			ctx.lineWidth = zoom * 0.5;
+			ctx.strokeRect(
+				mainCanvasX( selectedObj.x + 0.5 * 0.9 ),
+				mainCanvasY( selectedObj.y + 0.5 * 0.9 ),
+				mainCanvasX( selectedObj.w - 3),
+				mainCanvasY( selectedObj.h - 3)
+			);
+		}
+	});
 }
 
 function quotedC(str) {
