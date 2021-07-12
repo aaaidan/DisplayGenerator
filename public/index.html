@@ -17,6 +17,12 @@
 		Tools<br />
 		<button v-for="t in tools" class="tool" v-on:click="clickTool(t)" v-bind:class="{ active: t == currentTool }">{{t}}</button>
 	</div>
+
+	<div style="margin-top: 20px;">
+		View Options
+		<div><label><input type="checkbox" v-model="constructionLines" /> Construction lines</label></div>
+		<div><label><input type="checkbox" v-model="showSelection" /> Show selection</label></div>
+	</div>
 	
 	<div style="margin-top: 20px;">
 		Objects
