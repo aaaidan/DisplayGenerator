@@ -57,6 +57,7 @@ function initializeVue() {
 
 	const toolPlugins = {
 		"select": {
+			shortcut: 'V',
 			findTopObjectAt: function(objects, coords) {
 				let [x,y] = coords;
 				return objects.slice().reverse().find(o => {
@@ -74,6 +75,11 @@ function initializeVue() {
 				let obj = toolPlugins.select.findTopObjectAt(app.objects, coords);
 				app.selectObject(obj, event);
 			},
+			dragStart: function(app, {event}) {
+				if (event.altKey || event.metaKey) {
+					app.duplicateSelection();
+				}
+			},
 			drag: function(app, data) {
 				var delta = [
 					data.coords[0] - data.lastCoords[0],
@@ -90,6 +96,7 @@ function initializeVue() {
 			},
 		},
 		"rect": {
+			shortcut: 'R',
 			currentRect: null,
 			mousedown: function(app, data) {
 				toolPlugins.rect.currentRect = {
@@ -130,7 +137,8 @@ function initializeVue() {
 				this.toolEvent('mouseup', { event }); // no coords outside of canvas
 			});
 			window.addEventListener('keydown', (e) => {
-				console.log(e.key, e.code);
+				if (window['__keycodes']) console.log(`${e.code} (${e.key})`);
+
 				switch(e.code) {
 				case "Delete":
 				case "Backspace": 
@@ -152,6 +160,13 @@ function initializeVue() {
 					}
 					break;
 				}
+
+				Object.entries(toolPlugins).forEach(([pluginName, {shortcut}]) => {
+					if (e.code === `Key${shortcut}`) {
+						this.currentTool = pluginName
+					}
+				});
+
 			});
 			try {
 				if (localStorage.savedEditorState) {
@@ -181,7 +196,8 @@ function initializeVue() {
 		data: {
 			tools: Object.keys(toolPlugins),
 			currentTool: "rect",
-			dragging: false,
+			canvasDragging: false,
+			canvasMouseIsDown: false,
 			objects: [],
 			selectedObjects: [],
 			hoveredObject: null,
@@ -222,9 +238,16 @@ function initializeVue() {
 			invertDisplay:false
 		},
 		methods: {
+			duplicateSelection: function() {
+				this.selectedObjects = this.selectedObjects.map(o => ({...o, id: this.nextId++}));
+				this.objects.push(...this.selectedObjects);
+			},
 			deleteObjects: function(objs) {
 				this.objects = this.objects.filter(o => !objs.includes(o));
 				this.selectedObjects = this.selectedObjects.filter(o => !objs.includes(o));
+				if (objs.includes(this.hoveredObject)) {
+					this.hoverObject(null);
+				}
 				updateOutput();
 			},
 			selectObject(obj, event) {
@@ -248,7 +271,6 @@ function initializeVue() {
 							updateOutput();
 						}
 					} else {
-						console.log('nothing found');
 						this.selectedObject = null;
 						updateOutput();
 					}
@@ -438,7 +460,14 @@ function initializeVue() {
 			},
 			canvasMove: function(event) {
 				let coords = this.getEventCoords(event);
-				if (this.dragging) {
+				if (this.canvasMouseIsDown) {
+					if (!this.canvasDragging) {
+						this.canvasDragging = true;
+						this.toolEvent('dragStart', { 
+							coords, event,
+							lastCoords: this.lastDragCoords
+						});
+					}
 					this.toolEvent('drag', { 
 						coords, event,
 						lastCoords: this.lastDragCoords
@@ -450,13 +479,14 @@ function initializeVue() {
 			},
 			canvasMouseDown: function(event) {
 				let coords = this.getEventCoords(event);
-				this.dragging = true;
+				this.canvasMouseIsDown = true;
 				this.toolEvent('mousedown', { coords, event });
 				this.lastDragCoords = coords;
 			},
 			canvasMouseUp: /** @param {MouseEvent} event */ function(event) {
 				let coords = this.getEventCoords(event);
-				this.dragging = false;
+				this.canvasMouseIsDown = false;
+				this.canvasDragging = false;
 
 				event.stopImmediatePropagation();
 
