@@ -36,3 +36,26 @@ font-family: monospace;
     background: dodgerblue;
     color: white;
 }
+
+.object-list {
+    list-style: circle;
+    background: #111833;
+    color: white;
+    padding: 10px 30px;
+    max-width: 300px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+.object-list li {
+    color: white;
+    padding: 5px 5px;
+    cursor: pointer;
+}
+.object-list li:hover {
+    background: #fff1;
+}
+
+.object-list .selected {
+    color: orange;
+    list-style: square;
+}

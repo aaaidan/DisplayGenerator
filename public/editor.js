@@ -70,32 +70,9 @@ function initializeVue() {
 			},
 			hover: function(app, data) {
 			},
-			mousedown: function(app, data) {
-				let obj = toolPlugins.select.findTopObjectAt(app.objects, data.coords);
-				if (data.event.shiftKey) {
-					if (obj) {
-						if (app.selectedObjects.includes(obj)) {
-							app.selectedObjects = app.selectedObjects.filter(o => o !== obj);
-							updateOutput();
-						} else {
-							app.selectedObjects.push(obj);
-							updateOutput();
-						}
-					} else {
-						// shrug
-					}
-				} else {
-					if (obj) {
-						if (!app.selectedObjects.includes(obj)) {
-							app.selectedObject = app.objects.find(v => v == obj);
-							updateOutput();
-						}
-					} else {
-						console.log('nothing found');
-						app.selectedObject = null;
-						updateOutput();
-					}
-				}
+			mousedown: function(app, { coords, event }) {
+				let obj = toolPlugins.select.findTopObjectAt(app.objects, coords);
+				app.selectObject(obj, event);
 			},
 			drag: function(app, data) {
 				var delta = [
@@ -157,7 +134,7 @@ function initializeVue() {
 				switch(e.code) {
 				case "Delete":
 				case "Backspace": 
-					this.deleteObject(this.selectedObjects);
+					this.deleteObjects(this.selectedObjects);
 					break;
 
 				case "BracketLeft":
@@ -207,13 +184,8 @@ function initializeVue() {
 			dragging: false,
 			objects: [],
 			selectedObjects: [],
-			commands: [
-				// {id:1, op:'setTextColor', invert:false},
-				// {id:2, op:'setTextSize', size:"1"},
-				// {id:3, op:'setFont', font:"Default"},
-				// {id:4, op:'setCursor', x:"0", y:"10"},
-				// {id:5, op:'println', text:"HELLO WORLD"}
-				],
+			hoveredObject: null,
+			commands: [],
 			fonts: fontArray,
 			commandNames: [
 				'writePixel', 'drawLine','drawRect','fillRect','drawRoundRect','fillRoundRect',
@@ -250,12 +222,41 @@ function initializeVue() {
 			invertDisplay:false
 		},
 		methods: {
-			deleteObject: function(objs) {
+			deleteObjects: function(objs) {
 				this.objects = this.objects.filter(o => !objs.includes(o));
-				if (objs.includes(this.selectedObject)) {
-					this.selectedObject = null;
-				}
+				this.selectedObjects = this.selectedObjects.filter(o => !objs.includes(o));
 				updateOutput();
+			},
+			selectObject(obj, event) {
+				const toggle = event.shiftKey;
+				if (toggle) {
+					if (obj) {
+						if (this.selectedObjects.includes(obj)) {
+							this.selectedObjects = this.selectedObjects.filter(o => o !== obj);
+							updateOutput();
+						} else {
+							this.selectedObjects.push(obj);
+							updateOutput();
+						}
+					} else {
+						// ¯\_(ツ)_/¯
+					}
+				} else {
+					if (obj) {
+						if (!this.selectedObjects.includes(obj)) {
+							this.selectedObject = this.objects.find(v => v == obj);
+							updateOutput();
+						}
+					} else {
+						console.log('nothing found');
+						this.selectedObject = null;
+						updateOutput();
+					}
+				}
+			},
+			hoverObject(obj) {
+				this.hoveredObject = obj;
+				render();
 			},
 			moveBack: function(objs) {
 				// Moving a potentially discontiguous set of objects might be 
@@ -1062,17 +1063,19 @@ function generateCommands() {
 	const commands = [];
 
 	mainApp.objects.forEach(o => {
-		var {x,y,w,h} = o;
-		commands.push({
-			op: "fillRect",
-			color: 0,
-			x,y,w,h
-		});
-		commands.push({
-			op: "drawRect",
-			color: 1,
-			x,y,w,h
-		});
+		var {x,y,w,h,type} = o;
+		if (type == "rect") {
+			commands.push({
+				op: "fillRect",
+				color: 0,
+				x,y,w,h
+			});
+			commands.push({
+				op: "drawRect",
+				color: 1,
+				x,y,w,h
+			});
+		}
 	});
 
 	return commands;
@@ -1099,7 +1102,7 @@ async function updateOutput(heavy = false) {
 		});
 	}
 
-	var commands = generateCommands(); //mainApp.commands;
+	var commands = generateCommands();
 
 	var codeIncl = '';
 	var codeDecl = '';
@@ -1362,6 +1365,18 @@ function render() {
 			}
 		}
 	}
+	if (mainApp.hoveredObject) {
+		const obj = mainApp.hoveredObject;
+		if (obj.type == "rect") {
+			ctx.fillStyle = "#fff1";
+			ctx.fillRect(
+				mainCanvasX( obj.x ),
+				mainCanvasY( obj.y ),
+				mainCanvasX( obj.w - 2 ),
+				mainCanvasY( obj.h - 2 )
+			);
+		}
+	}
 	mainApp.objects.forEach(obj => {
 		if (obj.type == "rect") {
 			ctx.strokeStyle = "#fff3";
@@ -1369,8 +1384,8 @@ function render() {
 			ctx.strokeRect(
 				mainCanvasX( obj.x + 0.5 * 0.9 ),
 				mainCanvasY( obj.y + 0.5 * 0.9 ),
-				mainCanvasX( obj.w - 3),
-				mainCanvasY( obj.h - 3)
+				mainCanvasX( obj.w - 3 ),
+				mainCanvasY( obj.h - 3 )
 			);
 		}
 	});
@@ -1381,8 +1396,8 @@ function render() {
 			ctx.strokeRect(
 				mainCanvasX( selectedObj.x + 0.5 * 0.9 ),
 				mainCanvasY( selectedObj.y + 0.5 * 0.9 ),
-				mainCanvasX( selectedObj.w - 3),
-				mainCanvasY( selectedObj.h - 3)
+				mainCanvasX( selectedObj.w - 3 ),
+				mainCanvasY( selectedObj.h - 3 )
 			);
 		}
 	});
