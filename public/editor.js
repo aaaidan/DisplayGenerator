@@ -30,9 +30,7 @@ function go() {
 	// Create an Adafruit GFX 1-bit deep bitmap of screenx x screeny pixels
 	// Note: when using the short display the GFX screen size is still set at
 	// 128x64, it's just the bottom half isn't rendered to the screen.
-	
 	gfx = new Module['TestGFX'](screenx, screeny);
-	console.log("yeuhhhh");
 	window['main'] = Module;
 	initializeVue();
 }
@@ -112,6 +110,7 @@ function initializeVue() {
 					fillColor: null
 				};
 				app.objects.push(toolPlugins.rect.currentRect);
+				app.selectedObject = toolPlugins.rect.currentRect;
 				updateOutput();
 			},
 			drag: function(app, data) {
@@ -121,7 +120,10 @@ function initializeVue() {
 				updateOutput();
 			},
 			mouseup: function(app, data) {
+				app.selectedObject = toolPlugins.rect.currentRect;
+				console.log("mouseup", app.selectedObject);
 				toolPlugins.rect.currentRect = null;
+				updateOutput();
 			},
 		},
 	}
@@ -135,22 +137,28 @@ function initializeVue() {
 			window.addEventListener('mouseup', () => {
 				this.toolEvent('mouseup', {}); // no coords outside of canvas
 			});
+			window.addEventListener('keydown', (e) => {
+				// console.log(e.key);
+				if (e.key == "Delete" || e.key == "Backspace") {
+					this.deleteObject(this.selectedObject);
+				}
+			});
 			try {
 				if (localStorage.savedEditorState) {
 					const savedState = JSON.parse(localStorage.savedEditorState);
 					this.objects = savedState.objects;
 					this.nextId = savedState.nextId;
+
+					if (this.tools.includes(savedState.currentTool)) {
+						this.currentTool = savedState.currentTool;
+					}
 				}
 			} catch(e) {
 				console.error("Failed to revive.", e)
 			}
 		},
 		data: {
-			tools: [
-				"select",
-				"rect",
-				"text"
-			],
+			tools: Object.keys(toolPlugins),
 			currentTool: "rect",
 			dragging: false,
 			objects: [],
@@ -198,6 +206,13 @@ function initializeVue() {
 			invertDisplay:false
 		},
 		methods: {
+			deleteObject: function(obj) {
+				this.objects = this.objects.filter(o => o !== obj);
+				if (this.selectedObject === obj) {
+					this.selectedObject = null;
+				}
+				updateOutput();
+			},
 			clickTool: function(toolname) {
 				this.currentTool = toolname;
 			},
@@ -215,7 +230,6 @@ function initializeVue() {
 			},
 			uploadCommand: function(event) {
 				var files = event.target.files;
-				// console.log("files", files);
 
 				if (files.length == 1) {
 					// https://www.html5rocks.com/en/tutorials/file/dndfiles/
@@ -338,9 +352,11 @@ function initializeVue() {
 				this.toolEvent('mousedown', { coords });
 				this.lastDragCoords = coords;
 			},
-			canvasMouseUp: function(event) {
+			canvasMouseUp: /** @param {MouseEvent} event */ function(event) {
 				let coords = this.getEventCoords(event);
 				this.dragging = false;
+
+				event.stopImmediatePropagation();
 
 				this.toolEvent('mouseup', { coords });
 
@@ -969,15 +985,18 @@ function nextAnimationFrame() {
 
 var debouncedGenerateCode = debounce(() => {
 	updateOutput(true);
-}, 500, { leading: false, trailing: true });
+}, 200, { leading: false, trailing: true });
 
-async function updateOutput(generateCode = false) {
-	console.log('rendering', generateCode ? "with" : "without" , "code");
-
-	localStorage.savedEditorState = JSON.stringify({
-		objects: mainApp.objects,
-		nextId: mainApp.nextId
-	});
+async function updateOutput(heavy = false) {
+	
+	if (heavy) {
+		console.log('Generating and saving...');
+		localStorage.savedEditorState = JSON.stringify({
+			objects: mainApp.objects,
+			nextId: mainApp.nextId,
+			currentTool: mainApp.currentTool,
+		});
+	}
 
 	var commands = generateCommands(); //mainApp.commands;
 
@@ -1144,7 +1163,7 @@ async function updateOutput(generateCode = false) {
 
 	codeImpl += '}\n';
 
-	if (generateCode) {
+	if (heavy) {
 		mainApp.codeText = codeIncl + codeDecl + '\n' + codeImpl;
 	}
 
@@ -1152,7 +1171,9 @@ async function updateOutput(generateCode = false) {
 
 	render();
 
-	debouncedGenerateCode(); // queue up code regen
+	if (!heavy) {
+		debouncedGenerateCode(); // queue up code regen
+	}
 }
 
 function mainCanvasX(x) {
