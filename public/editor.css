@@ -43,7 +43,7 @@ font-family: monospace;
     color: white;
     padding: 10px 30px;
     max-width: 300px;
-    max-height: 300px;
+    max-height: 285px;
     overflow-y: auto;
 }
 .object-list li {

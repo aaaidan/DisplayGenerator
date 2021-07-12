@@ -4,9 +4,13 @@
 
 // @ts-ignore
 import debounce from 'https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/debounce.js';
+import defaultState from "./default-state.js"
 
-// import throttle from './lodash-es/throttle.js'
-// window['t'] = throttle;
+if (!localStorage.savedEditorState) {
+	localStorage.savedEditorState = defaultState;
+}
+
+// TODO: drag all the plugin code outta here (implement each object hit-test, render, code-gen separately)
 
 var screenx = 128;
 var screeny = 64;
@@ -35,14 +39,9 @@ function go() {
 	initializeVue();
 }
 
-Module.onRuntimeInitialized = function() {
-	console.log('Enscripten loaded!');
-	
-	go();
-}
-if (Module['TestGFX']) {
-	go();
-}
+// Only one of these should fire.
+Module.onRuntimeInitialized = function() { go(); }
+if (Module['TestGFX']) { go(); }
 
 function initializeVue() {
 
@@ -122,6 +121,27 @@ function initializeVue() {
 				updateOutput();
 			},
 		},
+		"text": {
+			mousedown: function(app, data) {
+				const newText = {
+					id: app.nextId++,
+					type: "text",
+					text: prompt("Text", "Hello"),
+					x: data.coords[0],
+					y: data.coords[1],
+				};
+				app.canvasMouseIsDown = false; // TODO: hack because of prompt()
+				app.canvasDragging = false; // TODO: hack because of prompt()
+
+				// TODO: make these computed values somehow
+				newText.w = 6 * newText.text.length - 1;
+				newText.h = 7;
+				app.objects.push(newText);
+				app.selectedObject = newText;
+				app.currentTool = "select"; // TODO: is this good? if so, consider how to do it properly
+				updateOutput();
+			}
+		}
 	}
 
 	mainApp = new Vue({
@@ -237,6 +257,11 @@ function initializeVue() {
 			invertDisplay:false
 		},
 		methods: {
+			clearDocument: function() {
+				if (confirm("Delete everything? No undo.")) {
+					this.deleteObjects(this.objects);
+				}
+			},
 			duplicateSelection: function() {
 				this.selectedObjects = this.selectedObjects.map(o => ({...o, id: this.nextId++}));
 				this.objects.push(...this.selectedObjects);
@@ -1103,7 +1128,8 @@ function generateCommands() {
 
 	mainApp.objects.forEach(o => {
 		var {x,y,w,h,type} = o;
-		if (type == "rect") {
+		switch (type) {
+		case "rect":
 			commands.push({
 				op: "fillRect",
 				color: 0,
@@ -1114,6 +1140,21 @@ function generateCommands() {
 				color: 1,
 				x,y,w,h
 			});
+			break;
+		case "text":
+			commands.push({
+				op: "setTextWrap",
+				w: 0
+			});
+			commands.push({
+				op: "setCursor",
+				x,y
+			});
+			commands.push({
+				op: "print",
+				text: o.text,
+			})
+			break;
 		}
 	});
 
@@ -1418,7 +1459,9 @@ function render() {
 	}
 	if (mainApp.constructionLines) {
 		mainApp.objects.forEach(obj => {
-			if (obj.type == "rect") {
+			switch (obj.type) {
+			// TODO: repetition of calculating dimensions, rect and text, if not more
+			case "rect":
 				ctx.strokeStyle = "#fff3";
 				ctx.lineWidth = zoom * 0.25;
 				ctx.strokeRect(
@@ -1427,12 +1470,27 @@ function render() {
 					mainCanvasX( obj.w - 3 ),
 					mainCanvasY( obj.h - 3 )
 				);
+				break;
+			case "text":
+				ctx.strokeStyle = "#fff3";
+				ctx.lineWidth = zoom * 0.25;
+				// let charWidth = 5;
+				// let charHeight = 4;
+				// let textWidth = obj.text.length * charWidth;
+				ctx.strokeRect(
+					mainCanvasX( obj.x - 1 + 0.5 * 0.9 ),
+					mainCanvasY( obj.y - 1 + 0.5 * 0.9 ),
+					mainCanvasX( obj.w - 1 ),
+					mainCanvasY( obj.h - 1 )
+				);
+				break;
 			}
 		});
 	}
 	if (mainApp.showSelection) {
 		mainApp.selectedObjects.forEach(selectedObj => {
-			if (selectedObj.type == "rect") {
+			switch (selectedObj.type) {
+			case "rect":
 				ctx.strokeStyle = "#f80";
 				ctx.lineWidth = zoom * 0.5;
 				ctx.strokeRect(
@@ -1441,6 +1499,20 @@ function render() {
 					mainCanvasX( selectedObj.w - 3 ),
 					mainCanvasY( selectedObj.h - 3 )
 				);
+				break;
+			case "text": 
+				ctx.strokeStyle = "#f80";
+				ctx.lineWidth = zoom * 0.5;
+				// let charWidth = 5;
+				// let charHeight = 4;
+				// let textWidth = selectedObj.text.length * charWidth;
+				ctx.strokeRect(
+					mainCanvasX( selectedObj.x - 1 + 0.5 * 0.9 ),
+					mainCanvasY( selectedObj.y - 1 + 0.5 * 0.9 ),
+					mainCanvasX( selectedObj.w - 1 ),
+					mainCanvasY( selectedObj.h - 1 )
+				);
+				break;
 			}
 		});
 	}
