@@ -24,15 +24,11 @@ Here's a sample screen:
 
 <a href="https://aaaidan.github.io/DisplayGenerator/public/"><img src="images/screen-editor.png" alt="Main screen" width="450" /></a>
 
-At the top is a zoomed display on the left and 1:1 display on the right.
+At the top is a zoomed display on the left and 1:1 display on the right. Use tools to add and edit drawing objects. As you edit the canvas, the app immediately updates the output code at the bottom of the page. You can use this code into your arduino project.
+
+Your work is automatically saved. Reloading your browser will not destroy your work. 
 
 The Display Type popup allows you to choose a different display type. It's currently limited to standard SSD1306 monochrome displays.
-
-The list is populated by simple drawing objects, like text and rectangles.
-
-As you edit the canvas, the app immediately updates the output code.
-
-Save Layout and Load Layout can be used to save your design so you can load it later and continue to edit it.
 
 ## Shortcuts and tricks
 
@@ -44,6 +40,8 @@ Eventually this app is meant to be comfortable to those who are familiar with tr
 * `Shift-]` push selected objects to front
 * `Backspace` `Delete` Delete selected objects.
 * `Alt drag` Duplicate selected objects.
+
+More to come.
 
 ## Roadmap
 
