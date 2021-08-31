@@ -16,13 +16,13 @@ This project is a web-based tool that allows you to design your display code fro
 
 The code actually runs the Adafruit GFX code in your browser so the display behavior, fonts, etc. are pixel-perfect to an actual device!
 
-To use the tool, go to the [DisplayGenerator Web Page](https://rickkas7.github.io/DisplayGenerator/index.html). It's just the public directory of this repository served by Github Pages.
+To use the tool, go to the [DisplayGenerator Web Page](https://aaaidan.github.io/DisplayGenerator/public/). (It's just the public directory of this repository served by Github Pages.)
 
 ## What can you do with it?
 
 Here's a sample screen:
 
-![Main Screen](images/screen1.png)
+![Main Screen](images/screen-editor.png)
 
 At the top is the 3x enlarged display on the left and actual-sized display on the right
 
@@ -41,26 +41,6 @@ Code is the generated code based on your settings.
 
 The other major feature is the icon/bitmap generator. If you add a **drawIcon** command, an additional pane will appear:
 
-![Icon Screen](images/screen2.png)
-
-You can select size size of the icon. Default is 24 pixels square. It can be from 6 to 64 pixels. You can also select non-square dimensions.
-
-When the icons are scaled they're anti-alised. The weight values determines which gray values will be set. Setting it close to 1 will mean even the lightest gray will be black. Setting it close to 255 will only keep the actual black pixels black.
-
-Normally the code box is hidden when selecting an icon. It will reappear if you select a command other than **drawIcon** or you can use the **Show code** checkbox.
-
-![Code screen with icon](images/screen4.png)
-
-Use **Upload and convert image file** **Choose File** button to upload an image file (gif, jpeg, png, svg). It will be scaled, but it's best if it has the same size and aspect ratio as you've selected for the icon. This is how you convert an image into a bitmap in code.
-
-Or, you can select a pre-made icon from the open-source [FeatherIcons](https://feathericons.com/) collection. 
-
-There are a lot of icons, so you can search by name. If you clear the **Search** text box, all icons will shown.
-
-Click on an icon to select that icon. It will populate the command section at the top, where you can adjust parameters like the position of the icon.
-
-![drawIcon command](images/screen3.png)
-
 
 ## How it works
 
@@ -77,18 +57,10 @@ There are two main parts:
 
 Emscripten generates the necessary bindings so I can call C++ code from Javascript. I added wrappers for all of the GFX calls and a call to read the bitmap data out as an array of bytes.
 
-The "program" is just a JSON array with an object for each command like writePixel, drawLine, drawRect, etc.. It's an array so you might have multiple setCursor and drawText commands, for example, in it.
-
-The save and load options read and write this JSON object.
-
-The display generator iterates this array and calls the GFX code with the appropriate parameters to render the display.
-
-It also generates the C++ display code, including the GFX calls, any additional includes, and any bitmap data.
-
-The Javascript code takes the display bitmap and renders it on a HTML5 canvas in normal and zoomed size.
-
-
 ## Releases
+
+#### 0.0.3-aidan
+- Make it more about primitive display objects and less about draw commands.
 
 #### 0.0.3
 
