@@ -22,7 +22,7 @@ To use the tool, go to the [DisplayGenerator Web Page](https://aaaidan.github.io
 
 Here's a sample screen:
 
-<img src="images/screen-editor.png" alt="Main screen" width="450" />
+<a href="https://aaaidan.github.io/DisplayGenerator/public/"><img src="images/screen-editor.png" alt="Main screen" width="450" /></a>
 
 At the top is a zoomed display on the left and 1:1 display on the right.
 
