@@ -74,15 +74,17 @@ In no particular order.
   * Paste bitmaps from clipboard
 * Fonts
 * Shape properties (transparent, stroke and fill colors, stroke width)
+* Undo/redo
+* Copy-paste within app
 * Parameterization of properties (visibility, stroke, fill, strings)
 * Components
 * Screens? Transitions?
 * Offline webapp?
   * Working with local folders (automatically overwrite export?)
 * Efficient re-rendering? (Only re-render what has updated)
-* Refactor, modernize js.
-  * Require and make use of ES6.
-  * Consider dropping Vue. Seems fine.
+* Refactor, modernize js
+  * Require and make use of ES6
+  * Consider dropping Vue. Seems fine
 
 ## How it works
 
