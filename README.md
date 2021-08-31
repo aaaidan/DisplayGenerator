@@ -24,29 +24,69 @@ Here's a sample screen:
 
 ![Main Screen](images/screen-editor.png)
 
-At the top is the 3x enlarged display on the left and actual-sized display on the right
+At the top is a zoomed display on the left and 1:1 display on the right.
 
 The Display Type popup allows you to choose a different display type. It's currently limited to standard SSD1306 monochrome displays.
 
-The list is populated by four commonly used commands, but you can add, delete, and move them as desired.
+The list is populated by simple drawing objects, like text and rectangles.
 
-As you edit the fields, for example change the y value for the setCursor command, the display immediate updates, as does the code box, below.
-
-The add a command feature can be used for writePixel, drawLine, drawRect, fillRect, drawCircle, etc..
+As you edit the canvas, the app immediately updates the output code.
 
 Save Layout and Load Layout can be used to save your design so you can load it later and continue to edit it.
 
-Code is the generated code based on your settings.
+## Shortcuts and tricks
 
+Eventually this app is meant to be comfortable to those who are familiar with traditional vector drawing apps, like Illustrator. 
 
-The other major feature is the icon/bitmap generator. If you add a **drawIcon** command, an additional pane will appear:
+* `[` push selected objects back
+* `Shift-[` push selected objects to back
+* `]` bring selected objects forward
+* `Shift-]` push selected objects to front
+* `Backspace` `Delete` Delete selected objects.
+* `Alt drag` Duplicate selected objects.
 
+## Roadmap
+
+Eventually I'd like to get this to a place where you can build a complex view, export it to your Arduino app, and control it with simple parameters that you expose to your app code.
+
+```
+// Something like this... this is a rough, impressionistic example...
+
+#include './dynamic_view.h'
+DynamicView myDynamic;
+
+setup() {
+  // ...
+}
+
+loop() {
+  // update parameters...
+  
+  myDynamicView.render(button_a_down, button_b_down, tab_index, temperature_str);
+}
+```
+
+In no particular order.
+
+* Circles, lines and polylines, rounded rectangles, polygons
+* Groups
+* Custom and built-in icons, bitmaps
+  * Paste bitmaps from clipboard
+* Fonts
+* Shape properties (transparent, stroke and fill colors, stroke width)
+* Parameterization of properties (visibility, stroke, fill, strings)
+* Components
+* Screens? Transitions?
+* Offline webapp?
+  * Working with local folders (automatically overwrite export?)
+* Efficient re-rendering? (Only re-render what has updated)
+* Refactor, modernize js.
+  * Require and make use of ES6.
+  * Consider dropping Vue. Seems fine.
 
 ## How it works
 
-The entire thing is browser-based. I tested it in Chrome and Firefox. It might work on Safari. It probably won't work on Edge, and it definitely won't work on Internet Explorer. 
-
-Odds are iffy on mobile, but it doesn't really make sense to use it on a mobile device anyway.
+The entire thing is browser-based. It probably won't work on Edge, and it definitely won't work on Internet Explorer. 
 
 There are two main parts:
 
@@ -60,6 +100,7 @@ Emscripten generates the necessary bindings so I can call C++ code from Javascri
 ## Releases
 
 #### 0.0.3-aidan
+- First forked release.
 - Make it more about primitive display objects and less about draw commands.
 
 #### 0.0.3
